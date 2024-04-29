@@ -1,0 +1,34 @@
+{
+  "name": "dotsandboxes",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "homepage": "https://pslib-cz.github.io/2023-p3a-mpa-react-project-PetrMachacka/",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build --base /DotsAndBoxes/",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "deploy": "vite build && gh-pages -d dist"
+      },
+  "dependencies": {
+    "gh-pages": "^6.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-responsive": "^10.0.0",
+    "react-router-dom": "^6.22.3",
+    "react-svg": "^16.1.34"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.6",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0"
+  }
+}

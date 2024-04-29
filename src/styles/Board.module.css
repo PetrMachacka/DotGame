@@ -1,0 +1,75 @@
+
+
+.Dot{
+    background-color: #03045E;
+    border-radius: 50%;
+    width: 2em;
+    height: 2em;
+    display: inline-block;
+}
+
+.line {
+    display: inline-block;
+    padding: 0.5em;
+    position: relative;
+}
+.line::after {
+    content: "";
+    position: absolute;
+    top: -1.5em;
+    bottom: -1.5em;
+    left: -1.5em;
+    right: -1.5em;
+}
+.Horizontal {
+    width: 6em;
+    margin: 0.5em 0 ;
+}
+.Vertical {
+    height: 6em;
+    margin: 0 0.5em; 
+}
+/*Player 1 is red, Player 2 is blue*/
+
+.Player1{
+    background-color: #ff0000;
+}
+
+.Player2{
+    background-color: blue;
+}
+.line1:hover{
+    background-color: rgb(226, 115, 115);
+}
+
+.line2:hover {
+    background-color: rgb(115, 115, 226);
+}
+
+.Box {
+    width: 5em;
+    height: 5em;
+    padding: 1em;
+    display: inline-block;
+}
+
+.Board{
+    line-height: 0;
+}
+.BoardPadding{
+    display: inline-block;
+    width: fit-content;
+    background-color: white;
+    border-radius: 30px;
+    padding: 2em;
+}
+.BoardContainter{
+    display: block;
+}
+
+@media screen and (max-width: 500px){
+    html > *{
+        background-color: #0077B6;
+    }
+
+}
