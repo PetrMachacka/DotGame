@@ -31,8 +31,8 @@ const Settings = () => {
         <span>{size}</span>
         <button className={PlayGroundStyle.AddButton} onClick={() => handleBoardSizeChange(1)}>+</button>
       </div>
-      <button onClick={handleReset}>Reset Game</button>
-      <button onClick={handleBotToggle}>
+      <button className={PlayGroundStyle.AddButton} onClick={handleReset}>Reset Game</button>
+      <button className={PlayGroundStyle.AddButton} onClick={handleBotToggle}>
         {Playerstate.botOn ? "Turn off Bot" : "Turn on Bot"}
       </button>
       <Link to="/" className="settingsIcon">

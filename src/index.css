@@ -51,7 +51,12 @@ button {
   -webkit-user-select: none;
   touch-action: manipulation;
 }
-
+.AddButton {
+  background-color: #f9f9f9;
+  color: #FFFFFF;
+  padding: 0.5rem 1rem;
+  font-size: 14px;
+}
 button:hover {
   background-image: linear-gradient(-180deg, #1D95C9 0%, #17759C 100%);
 }

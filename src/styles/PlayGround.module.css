@@ -27,6 +27,11 @@
     margin: 1em 0;
     align-items: center;
 }
+
+.AddButton {
+    margin-bottom: 1em;;
+
+}
 .startAgainButton {
     position: fixed;
     top: 50%;
