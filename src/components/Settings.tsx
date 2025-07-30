@@ -11,7 +11,9 @@ const Settings = () => {
   const { dispatch } = useContext(ListContext);
   const [size, setSize] = useState(5);
   const handleBoardSizeChange = (change: number) => {
-    setSize(size + change);
+    if(size + change > 0){
+      setSize(size + change);
+    }
   };
 
   const handleReset = () => {
