@@ -4,7 +4,7 @@ import { PlayerContext } from '../Providers/PlayerProvider';
 
 type Grid = string[][];
 type Move = { x: number; y: number } | null;
-
+let CompletedBlock = 0;
 /**
  * Decide the bot move based on current grid state.
  * This is the pure logic part that can be replaced by AI later.
@@ -52,6 +52,7 @@ function getBotMove(grid: Grid): Move {
     // If there is a scoring move, take it
     if (threes.length > 0) {
         const { i, j } = threes[Math.floor(Math.random() * threes.length)];
+        CompletedBlock = 1;
         return getRandomMissingSide(bot, i, j);
     }
 
@@ -129,13 +130,19 @@ const Bot = () => {
         if (move) {
             setTimeout(() => {
                 dispatch({ type: 'addToGrid', y: move.y, x: move.x, player: Playerstate.currentPlayer });
-                Playerdispatch({ type: 'switchPlayer' });
-
+                if (CompletedBlock === 1) {
+                    CompletedBlock = 0;
+                } else {
+                    Playerdispatch({ type: 'switchPlayer' });
+                }
                 // Optional: Log for AI dataset
+                /*
                 const logs = JSON.parse(localStorage.getItem('game_logs') || '[]');
                 logs.push({ grid: state.items, move, player: 2 });
                 localStorage.setItem('game_logs', JSON.stringify(logs));
+                */
             }, 400);
+            
         }
     }, [state.items, Playerstate.currentPlayer]);
 
