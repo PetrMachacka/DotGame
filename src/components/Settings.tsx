@@ -8,8 +8,8 @@ import PlayGroundStyle from '../styles/PlayGround.module.css';
 
 const Settings = () => {
   const { Playerstate, Playerdispatch } = useContext(PlayerContext);
-  const { dispatch } = useContext(ListContext);
-  const [size, setSize] = useState(5);
+  const { dispatch, state } = useContext(ListContext);
+  const [size, setSize] = useState(state.size);
   const handleBoardSizeChange = (change: number) => {
     if(size + change > 0){
       setSize(size + change);

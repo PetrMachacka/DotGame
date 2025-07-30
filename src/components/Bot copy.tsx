@@ -9,28 +9,22 @@ type Move = { x: number; y: number } | null;
  * Decide the bot move based on current grid state.
  * This is the pure logic part that can be replaced by AI later.
  */
-function getBotMove(grid: Grid): Move {
+function getBotMove(grid: Grid, currentPlayer: number): Move {
     const size = (grid.length - 1) / 2; // Because your grid includes lines
     const bot: string[][] = Array.from({ length: size }, () => Array(size).fill(''));
+
     // Fill bot array with info about surrounding sides (L,R,T,B)
-    var BotY = 0;
-    for(let y = 1; y < size * 2 + 1; y+=2) {
-        for(let x = 0; x < size; x++) {
-            if (grid[y][x] == "1" || grid[y][x] == "2") {  
-                bot[BotY][x] += "L";
-            }
-            if (grid[y][x + 1] == "1" || grid[y][x + 1] == "2") {
-                bot[BotY][x] += "R";
-            }
-            if (grid[y + 1][x] == "1" || grid[y + 1][x] == "2") {
-                bot[BotY][x] += "B";
-            }
-            if (grid[y - 1][x] == "1" || grid[y - 1][x] == "2") {
-                bot[BotY][x] += "T";
-            }
+    let BotY = 0;
+    for (let y = 1; y < size * 2 + 1; y += 2) {
+        for (let x = 0; x < size; x++) {
+            if (grid[y][x]) bot[BotY][x] += 'L';
+            if (grid[y][x + 1]) bot[BotY][x] += 'R';
+            if (grid[y + 1][x]) bot[BotY][x] += 'B';
+            if (grid[y - 1][x]) bot[BotY][x] += 'T';
         }
         BotY++;
     }
+
     // Find cells with 3 sides filled (scoring moves)
     const threes: { i: number; j: number }[] = [];
     let smallest = Infinity;
@@ -52,18 +46,18 @@ function getBotMove(grid: Grid): Move {
     // If there is a scoring move, take it
     if (threes.length > 0) {
         const { i, j } = threes[Math.floor(Math.random() * threes.length)];
-        return getRandomMissingSide(bot, i, j);
+        return getRandomMissingSide(bot, i, j, size);
     }
 
     // Otherwise pick a move from the least occupied cells
     const { i, j } = smallestIndices[Math.floor(Math.random() * smallestIndices.length)];
-    return getStrategicSide(bot, i, j);
+    return getStrategicSide(bot, i, j, size);
 }
 
 /**
  * Pick a missing side for a cell
  */
-function getRandomMissingSide(bot: string[][], i: number, j: number): Move {
+function getRandomMissingSide(bot: string[][], i: number, j: number, size: number): Move {
     const BlockY = i * 2 + 1;
     const letters = ['L', 'R', 'B', 'T'];
     const remaining = letters.filter(letter => !bot[i][j].includes(letter));
@@ -81,7 +75,7 @@ function getRandomMissingSide(bot: string[][], i: number, j: number): Move {
 /**
  * Choose a strategic side minimizing opponent advantage
  */
-function getStrategicSide(bot: string[][], i: number, j: number): Move {
+function getStrategicSide(bot: string[][], i: number, j: number, size: number): Move {
     const BlockY = i * 2 + 1;
     const letters = ['L', 'R', 'B', 'T'];
     const remaining = letters.filter(letter => !bot[i][j].includes(letter));
@@ -123,9 +117,9 @@ const Bot = () => {
 
     useEffect(() => {
         if (Playerstate.currentPlayer !== 2) return;
-        console.log("Bot is making a move");
-        const move = getBotMove(state.items.map(row => row.map(cell => String(cell))));
-        console.log("Bot move:", move);
+
+        const move = getBotMove(state.items, Playerstate.currentPlayer);
+
         if (move) {
             setTimeout(() => {
                 dispatch({ type: 'addToGrid', y: move.y, x: move.x, player: Playerstate.currentPlayer });

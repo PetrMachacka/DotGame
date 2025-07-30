@@ -18,15 +18,11 @@ export const Board = () => {
     let fontSize;
     if (isDesktopOrLaptop) {
         fontSize = `${2 / state.size * 2 * 0.8}em`;
-        console.log('Desktop or Laptop');
     } else if (isBigTablet) {
         fontSize = `${2 / state.size * 2 * 0.6}em`;
-        console.log('Big Tablet');
     } else if (isTabletOrMobile) {
         fontSize = `${2 / state.size * 2 * 0.42}em`;
-        console.log('Tablet or Mobile');
     } else {
-        console.log('Default');
     }
     
     return (
