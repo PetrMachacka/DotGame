@@ -1,9 +1,13 @@
 import random
 
 class DotsAndBoxes:
-    def __init__(self, size=3):
+    def __init__(self, size=5):
         self.size = size
-        self.lines = [[0 for _ in range(size)] for _ in range(size*2-1)]
+        self.lines = [
+            [0 for _ in range(size if y % 2 == 0 else size + 1)]
+            for y in range(size * 2 - 1)
+        ]
+        print("Lines:", self.lines)
         self.boxes = [["" for _ in range(size)] for _ in range(size)]
         self.current_player = 1
         self.scores = {1: 0, 2: 0}
@@ -67,7 +71,7 @@ class DotsAndBoxes:
                 line += "•"
             else:  # vertical row
                 row = (y - 1) // 2
-                for x in range(self.size):
+                for x in range(self.size + 1):
                     if self.lines[y][x] != 0:
                         line += "│  "
                     else:
@@ -78,12 +82,24 @@ class DotsAndBoxes:
 
 
 
-game = DotsAndBoxes(size=3)
+game = DotsAndBoxes(size=5)
+game.make_move((0, 4))  # Example move
+game.make_move((0, 3))  # Example move
+game.make_move((0, 2))  # Example move
+game.make_move((0, 1))  # Example move
+game.make_move((0, 0))  # Example move
+game.make_move((1, 5))  # Example move
+game.make_move((1, 4))  # Example move
+game.make_move((1, 3))  # Example move
+game.make_move((1, 2))  # Example move
+game.make_move((1, 1))  # Example move
+game.make_move((1, 0))  # Example move
+
 game.print_board()
 
-while not game.is_game_over():
-    move = random.choice(game.get_possible_moves())
-    game.make_move(move)
-    game.print_board()
+#while not game.is_game_over():
+#    move = random.choice(game.get_possible_moves())
+#    game.make_move(move)
+#    game.print_board()
 
 print("Skóre:", game.scores)
