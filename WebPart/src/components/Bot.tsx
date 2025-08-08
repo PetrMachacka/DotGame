@@ -39,11 +39,18 @@ function checkIfMoveCompletesBox(items: number[][], y: number, x: number, isHori
 // Load Q-table from Python training
 async function loadQTable(): Promise<QTable | null> {
     try {
-        const response = await fetch('/qtable.json');
-        if (!response.ok) return null;
-        return await response.json();
+        // Add cache busting to ensure we get the latest Q-table
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/qtable.json?v=${timestamp}`);
+        if (!response.ok) {
+            console.log('Q-table fetch failed:', response.status);
+            return null;
+        }
+        const qtable = await response.json();
+        console.log(`✅ Q-table loaded successfully with ${Object.keys(qtable).length} entries`);
+        return qtable;
     } catch (error) {
-        console.log('Q-table not found, using heuristic bot');
+        console.log('Q-table not found, using heuristic bot:', error);
         return null;
     }
 }
@@ -220,7 +227,9 @@ function wouldCompleteBox(grid: number[][], y: number, x: number): boolean {
         }
         
         if (completesBox) {
-            console.log("🎯 FOUND COMPLETING MOVE!", y, x);
+            console.log("🎯💰💰💰 FOUND COMPLETING MOVE!", y, x);
+        } else {
+            console.log("🔍 Move", y, x, "does not complete a box");
         }
         
         return completesBox;
@@ -376,55 +385,76 @@ function findLeastDamagingMove(grid: number[][], moves: Move[]): Move | null {
 /**
  * Strategic bot move selection with priority-based decision making
  */
+/**
+ * COMPLETELY OVERHAULED - ULTRA AGGRESSIVE BOT
+ * This bot will NEVER give free points and will ALWAYS play
+ */
 function getBotMove(grid: Grid): Move {
-    console.log("🤖 AGGRESSIVE Strategic bot making move...");
+    console.log("🔥 ULTRA AGGRESSIVE BOT ACTIVATED");
     
     const allMoves = getAllPossibleMoves(grid);
-    console.log("Found", allMoves.length, "possible moves");
+    console.log(`🎯 Analyzing ${allMoves.length} possible moves`);
     
     if (allMoves.length === 0) {
-        console.error("No moves available at all!");
+        console.error("❌ NO MOVES AVAILABLE - GAME OVER");
         return null;
     }
     
-    // Convert to string grid for analysis
     const numGrid = grid.map(row => row.map(cell => Number(cell)));
     
-    // 1. PRIORITY 1: ALWAYS TAKE FREE POINTS (be super aggressive)
-    const completingMoves = allMoves.filter(move => 
-        move && wouldCompleteBox(numGrid, move.y, move.x)
-    );
-    
-    if (completingMoves.length > 0) {
-        console.log("🎯💰 TAKING FREE POINTS! Found", completingMoves.length, "completing moves");
-        // Take the first one immediately - no hesitation!
-        return completingMoves[0];
+    // 1. ABSOLUTE PRIORITY: Take ANY completing move immediately
+    for (const move of allMoves) {
+        if (move && wouldCompleteBox(numGrid, move.y, move.x)) {
+            console.log("💰💰💰 FOUND FREE POINTS - TAKING IMMEDIATELY:", move);
+            return move;
+        }
     }
     
-    console.log("😤 No free points available, looking for safe moves...");
-    
-    // 2. PRIORITY 2: Avoid giving opponent free points (but only if we can't score)
-    const safeMoves = allMoves.filter(move => 
-        move && !wouldGiveOpponentFreePoint(numGrid, move.y, move.x)
-    );
-    
-    if (safeMoves.length > 0) {
-        console.log("🛡️ Using", safeMoves.length, "safe moves");
+    // 2. Count how many boxes each move would give to opponent
+    const moveAnalysis = allMoves.map(move => {
+        if (!move) return { move, opponentGain: 999 };
         
-        // Among safe moves, prefer edge moves early in game
-        const edgeMoves = safeMoves.filter(move => move && isEdgeMove(numGrid, move.y, move.x));
-        if (edgeMoves.length > 0 && calculateGameProgress(numGrid) < 0.3) {
-            console.log("📍 Early game - using edge moves");
-            return edgeMoves[Math.floor(Math.random() * edgeMoves.length)];
+        // Simulate the move
+        const tempGrid = numGrid.map(row => [...row]);
+        tempGrid[move.y][move.x] = 1;
+        
+        // Count immediate completions opponent could make
+        let opponentGain = 0;
+        for (const opMove of allMoves) {
+            if (opMove && opMove !== move) {
+                if (wouldCompleteBox(tempGrid, opMove.y, opMove.x)) {
+                    opponentGain++;
+                }
+            }
         }
         
-        return safeMoves[Math.floor(Math.random() * safeMoves.length)];
+        return { move, opponentGain };
+    });
+    
+    // Sort by least damage to opponent
+    moveAnalysis.sort((a, b) => a.opponentGain - b.opponentGain);
+    
+    console.log("📊 Move analysis (opponent gains):");
+    moveAnalysis.slice(0, 5).forEach(analysis => {
+        console.log(`  Move ${analysis.move?.y},${analysis.move?.x} → Opponent gets ${analysis.opponentGain} boxes`);
+    });
+    
+    // 3. Take the move that gives opponent the LEAST advantage
+    const bestMove = moveAnalysis[0]?.move;
+    
+    if (bestMove) {
+        const damage = moveAnalysis[0].opponentGain;
+        if (damage === 0) {
+            console.log("✅ PERFECT MOVE - No points to opponent:", bestMove);
+        } else {
+            console.log(`⚠️ FORCED RISK - Giving opponent ${damage} potential points:`, bestMove);
+        }
+        return bestMove;
     }
     
-    // 3. PRIORITY 3: All moves are risky - choose least damaging
-    console.log("⚠️ All moves risky, minimizing damage");
-    const leastDamagingMove = findLeastDamagingMove(numGrid, allMoves);
-    return leastDamagingMove || allMoves[0];
+    // 4. Emergency fallback
+    console.log("🚨 EMERGENCY FALLBACK - Taking first available move");
+    return allMoves[0];
 }
 
 function getAllPossibleMoves(grid: Grid): Move[] {
@@ -491,79 +521,107 @@ const Bot = () => {
     }, []);
 
     useEffect(() => {
-        // Prevent multiple simultaneous moves
+        // ULTRA AGGRESSIVE BOT - ALWAYS PLAYS IMMEDIATELY
         if (Playerstate.currentPlayer !== 2 || !Playerstate.botOn || isMovingRef.current) return;
         
-        console.log("Bot turn activated");
+        console.log("🔥🔥🔥 ULTRA BOT TURN - PREPARING TO DOMINATE");
         isMovingRef.current = true;
         
-        // Always start with fresh move detection
+        // Get ALL possible moves immediately
         const allMoves = getAllPossibleMoves(state.items.map(row => row.map(cell => String(cell))));
-        console.log("All possible moves:", allMoves);
+        console.log(`🎯 Bot found ${allMoves.length} possible moves`);
         
         if (allMoves.length === 0) {
-            console.log("No moves available - game over");
+            console.log("🏁 No moves available - game over");
             isMovingRef.current = false;
             return;
         }
 
-        // Try to get a smart move first, but always fall back to a random valid move
+        // Get the bot's strategic move
         let selectedMove = null;
         
         try {
             const gridString = state.items.map(row => row.map(cell => String(cell)));
             selectedMove = getBotMove(gridString);
             
-            // Validate the smart move
-            if (selectedMove && state.items[selectedMove.y] && state.items[selectedMove.y][selectedMove.x] === 0) {
-                console.log("Using smart bot move:", selectedMove);
-            } else {
-                console.log("Smart move invalid, using random move");
-                selectedMove = allMoves[Math.floor(Math.random() * allMoves.length)];
+            // VALIDATE the move is actually valid
+            if (!selectedMove || 
+                !state.items[selectedMove.y] || 
+                state.items[selectedMove.y][selectedMove.x] !== 0) {
+                console.log("⚠️ Bot move invalid, using emergency backup");
+                selectedMove = allMoves[0]; // Take first available
             }
         } catch (error) {
-            console.error("Error getting smart move, using random:", error);
-            selectedMove = allMoves[Math.floor(Math.random() * allMoves.length)];
-        }
-
-        // Ensure we have a valid move
-        if (!selectedMove || !state.items[selectedMove.y] || state.items[selectedMove.y][selectedMove.x] !== 0) {
-            console.log("Selected move invalid, picking first available move");
+            console.error("💥 Bot error, using emergency backup:", error);
             selectedMove = allMoves[0];
         }
 
-        console.log("Final selected move:", selectedMove);
+        // ENSURE we have a valid move
+        if (!selectedMove) {
+            console.error("🚨 CRITICAL: No move selected, taking first available");
+            selectedMove = allMoves[0];
+        }
 
-        // Execute the move after a delay
+        console.log("🎯 FINAL SELECTED MOVE:", selectedMove);
+
+        // Execute move with MINIMAL delay for maximum aggression
         setTimeout(() => {
             try {
-                // Double-check the move is still valid
-                if (selectedMove && state.items[selectedMove.y] && state.items[selectedMove.y][selectedMove.x] === 0) {
-                    // Check if this move will complete a box
-                    const completesBlock = checkIfMoveCompletesBox(state.items, selectedMove.y, selectedMove.x, selectedMove.y % 2 === 0);
+                // Triple-check move is valid
+                if (selectedMove && 
+                    state.items[selectedMove.y] && 
+                    state.items[selectedMove.y][selectedMove.x] === 0) {
                     
-                    dispatch({ type: 'addToGrid', y: selectedMove.y, x: selectedMove.x, player: Playerstate.currentPlayer });
+                    // Check if this move completes a box
+                    const completesBlock = checkIfMoveCompletesBox(
+                        state.items, 
+                        selectedMove.y, 
+                        selectedMove.x, 
+                        selectedMove.y % 2 === 0
+                    );
+                    
+                    // EXECUTE THE MOVE
+                    dispatch({ 
+                        type: 'addToGrid', 
+                        y: selectedMove.y, 
+                        x: selectedMove.x, 
+                        player: Playerstate.currentPlayer 
+                    });
                     
                     if (completesBlock) {
-                        console.log("🎯 BOX COMPLETED! Bot gets another turn!");
-                        // Don't switch players, but DO allow bot to move again immediately
-                        isMovingRef.current = false; // Reset so bot can move again
+                        console.log("💰 BOX COMPLETED! Bot gets another turn!");
+                        // Don't switch players, reset for immediate next move
+                        isMovingRef.current = false;
                     } else {
-                        console.log("No box completed, switching players");
+                        console.log("➡️ Move complete, switching players");
                         Playerdispatch({ type: 'switchPlayer' });
                         isMovingRef.current = false;
                     }
                     
-                    console.log("Bot move executed successfully");
+                    console.log("✅ Bot move executed successfully");
                 } else {
-                    console.error("Move became invalid during execution");
+                    console.error("🚨 MOVE BECAME INVALID - EMERGENCY FALLBACK");
+                    // Take ANY available move as emergency
+                    const emergencyMoves = getAllPossibleMoves(state.items.map(row => row.map(cell => String(cell))));
+                    if (emergencyMoves.length > 0) {
+                        const emergency = emergencyMoves[0];
+                        if (emergency) {
+                            dispatch({ 
+                                type: 'addToGrid', 
+                                y: emergency.y, 
+                                x: emergency.x, 
+                                player: Playerstate.currentPlayer 
+                            });
+                            Playerdispatch({ type: 'switchPlayer' });
+                        }
+                    }
                     isMovingRef.current = false;
                 }
             } catch (error) {
-                console.error("Error executing bot move:", error);
+                console.error("💥 CRITICAL BOT ERROR:", error);
                 isMovingRef.current = false;
             }
-        }, 300);
+        }, 150); // Reduced delay for faster play
     }, [state.items, Playerstate.currentPlayer, Playerstate.botOn]);
 
     return null;
